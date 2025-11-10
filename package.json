@@ -9,7 +9,9 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "prebuild": "expo prebuild",
-    "seed:topics": "node scripts/seedTopics.js"
+    "seed:topics": "node scripts/seedTopics.js",
+    "generate:assets": "node scripts/generate-assets.js",
+    "postinstall": "node scripts/generate-assets.js"
   },
   "dependencies": {
     "@react-navigation/native": "^6.1.17",
