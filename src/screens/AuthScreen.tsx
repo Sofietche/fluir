@@ -1,11 +1,13 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import Constants from 'expo-constants';
 import { GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 
+import PrimaryButton from '../components/PrimaryButton';
+import TexturedBackground, { TextureShape } from '../components/TexturedBackground';
 import { auth, db } from '../firebase/firebaseConfig';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -26,6 +28,12 @@ const resolveGoogleConfig = (): GoogleExtraConfig => {
 
   return extra?.google ?? {};
 };
+
+const backgroundShapes: TextureShape[] = [
+  { top: -120, right: -60, width: 260, height: 260, opacity: 0.12, rotate: '24deg' },
+  { bottom: -140, left: -80, width: 280, height: 280, opacity: 0.08, rotate: '-18deg' },
+  { top: 180, left: -40, width: 160, height: 160, opacity: 0.1, rotate: '16deg' }
+];
 
 const AuthScreen: React.FC = () => {
   const googleConfig = useMemo(resolveGoogleConfig, []);
@@ -87,27 +95,23 @@ const AuthScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
+      <TexturedBackground shapes={backgroundShapes} />
       <Text style={styles.title}>Fluir</Text>
       <Text style={styles.subtitle}>Inicia sesión para continuar.</Text>
-      <TouchableOpacity
-        accessibilityRole="button"
-        activeOpacity={0.85}
-        style={[styles.button, (!request || isLoading || !isConfigured) && styles.buttonDisabled]}
+      <PrimaryButton
+        label="Continuar con Google"
         onPress={handleGoogleSignIn}
+        loading={isLoading}
         disabled={!request || isLoading || !isConfigured}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.buttonText}>Continuar con Google</Text>
-        )}
-      </TouchableOpacity>
+        size="large"
+      />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       {!isConfigured ? (
         <Text style={styles.helperText}>
           Configura las credenciales de Google en tu archivo .env para habilitar el inicio de sesión.
         </Text>
       ) : null}
+      {!request && !isConfigured ? <ActivityIndicator style={styles.indicator} color="#312E81" /> : null}
     </View>
   );
 };
@@ -118,7 +122,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 32,
-    backgroundColor: '#f4f3ff'
+    backgroundColor: '#f4f3ff',
+    position: 'relative'
   },
   title: {
     fontSize: 36,
@@ -131,24 +136,6 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     textAlign: 'center'
   },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    borderRadius: 999,
-    backgroundColor: '#4285F4',
-    minWidth: 260
-  },
-  buttonDisabled: {
-    opacity: 0.7
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600'
-  },
   errorText: {
     color: '#d93025',
     marginTop: 16,
@@ -159,6 +146,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#666',
     textAlign: 'center'
+  },
+  indicator: {
+    marginTop: 16
   }
 });
 

@@ -1,16 +1,15 @@
 import React, { useMemo } from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { User, signOut } from 'firebase/auth';
+import { Image, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { signOut } from 'firebase/auth';
 
+import PrimaryButton from '../components/PrimaryButton';
+import TopicPreviewCard from '../components/TopicPreviewCard';
 import { auth } from '../firebase/firebaseConfig';
+import { useProtectedRoute } from '../hooks/useProtectedRoute';
 import { RootStackParamList } from '../navigation/types';
 
-type HomeScreenProps = {
-  user: User;
-  navigation: NativeStackNavigationProp<RootStackParamList, 'home'>;
-};
+type HomeScreenProps = NativeStackScreenProps<RootStackParamList, 'home'>;
 
 type TopicCard = {
   id: string;
@@ -19,24 +18,6 @@ type TopicCard = {
   gradient: [string, string];
   accentColor: string;
 };
-
-type NoiseBlob = {
-  top?: number;
-  right?: number;
-  bottom?: number;
-  left?: number;
-  width: number;
-  height: number;
-  opacity: number;
-  rotate: string;
-};
-
-const noiseBlobs: NoiseBlob[] = [
-  { top: -36, left: -48, width: 160, height: 160, opacity: 0.18, rotate: '-18deg' },
-  { top: -24, right: -28, width: 140, height: 140, opacity: 0.12, rotate: '22deg' },
-  { bottom: -32, left: 12, width: 180, height: 180, opacity: 0.14, rotate: '-12deg' },
-  { bottom: -42, right: -36, width: 150, height: 150, opacity: 0.1, rotate: '16deg' }
-];
 
 const topics: TopicCard[] = [
   {
@@ -69,21 +50,32 @@ const topics: TopicCard[] = [
   }
 ];
 
-const HomeScreen: React.FC<HomeScreenProps> = ({ user, navigation }) => {
+const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
+  const { user } = useProtectedRoute(navigation);
+
   const initials = useMemo(() => {
+    if (!user) {
+      return '?';
+    }
+
     if (!user.displayName) {
       return user.email?.charAt(0).toUpperCase() ?? '?';
     }
+
     return user.displayName
       .split(' ')
       .filter(Boolean)
       .slice(0, 2)
       .map((segment) => segment.charAt(0).toUpperCase())
       .join('');
-  }, [user.displayName, user.email]);
+  }, [user]);
+
+  if (!user) {
+    return null;
+  }
 
   return (
-    <View style={styles.screen}>
+    <ScrollView contentContainerStyle={styles.scrollContainer} style={styles.screen}>
       <View style={styles.header}>
         <View style={styles.userInfo}>
           {user.photoURL ? (
@@ -98,20 +90,24 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ user, navigation }) => {
             <Text style={styles.userName}>{user.displayName ?? user.email ?? 'Usuario'}</Text>
           </View>
         </View>
-        <TouchableOpacity
-          accessibilityRole="button"
-          style={styles.signOutButton}
+        <PrimaryButton
+          label="Cerrar sesión"
           onPress={() => signOut(auth)}
-        >
-          <Text style={styles.signOutText}>Cerrar sesión</Text>
-        </TouchableOpacity>
+          size="small"
+          variant="outline"
+          style={styles.signOutButton}
+          textStyle={styles.signOutText}
+        />
       </View>
+      <Text style={styles.sectionTitle}>Explora tu próxima carta</Text>
       <View style={styles.topicsContainer}>
         {topics.map((topic) => (
-          <TouchableOpacity
+          <TopicPreviewCard
             key={topic.id}
-            activeOpacity={0.85}
-            style={styles.topicButton}
+            title={topic.title}
+            description={topic.description}
+            gradient={topic.gradient}
+            accentColor={topic.accentColor}
             onPress={() =>
               navigation.navigate('topic', {
                 id: topic.id,
@@ -121,60 +117,28 @@ const HomeScreen: React.FC<HomeScreenProps> = ({ user, navigation }) => {
                 accentColor: topic.accentColor
               })
             }
-          >
-            <LinearGradient
-              colors={topic.gradient}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.topicGradient}
-            >
-              <View pointerEvents="none" style={styles.noiseLayer}>
-                {noiseBlobs.map((blob, index) => (
-                  <View
-                    // eslint-disable-next-line react/no-array-index-key
-                    key={index}
-                    style={[
-                      styles.noiseBlob,
-                      {
-                        top: blob.top,
-                        right: blob.right,
-                        bottom: blob.bottom,
-                        left: blob.left,
-                        width: blob.width,
-                        height: blob.height,
-                        opacity: blob.opacity,
-                        transform: [{ rotate: blob.rotate }]
-                      }
-                    ]}
-                  />
-                ))}
-              </View>
-              <View style={styles.topicContent}>
-                <View style={[styles.topicIndicator, { backgroundColor: topic.accentColor }]} />
-                <Text style={styles.topicTitle}>{topic.title}</Text>
-                <Text style={styles.topicDescription}>{topic.description}</Text>
-              </View>
-            </LinearGradient>
-          </TouchableOpacity>
+          />
         ))}
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    paddingTop: 48,
-    paddingBottom: 32,
     backgroundColor: '#EEF1FF'
+  },
+  scrollContainer: {
+    paddingTop: 48,
+    paddingBottom: 40
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 24,
-    marginBottom: 16
+    marginBottom: 24
   },
   userInfo: {
     flexDirection: 'row',
@@ -209,73 +173,24 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   signOutButton: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: '#3730A3',
-    shadowColor: '#312E81',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4
+    paddingHorizontal: 18
   },
   signOutText: {
-    color: '#fff',
+    fontSize: 14,
     fontWeight: '600'
   },
-  topicsContainer: {
-    flex: 1,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '700',
     paddingHorizontal: 24,
+    marginBottom: 16,
+    color: '#1F2937'
+  },
+  topicsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    justifyContent: 'space-between'
-  },
-  topicButton: {
-    width: '48%',
-    borderRadius: 28,
-    overflow: 'hidden',
-    shadowColor: '#1F2937',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.18,
-    shadowRadius: 24,
-    elevation: 10,
-    marginBottom: 16
-  },
-  topicGradient: {
-    padding: 20,
-    borderRadius: 28,
-    minHeight: 160,
-    position: 'relative',
-    overflow: 'hidden'
-  },
-  noiseLayer: {
-    ...StyleSheet.absoluteFillObject
-  },
-  noiseBlob: {
-    position: 'absolute',
-    borderRadius: 999,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)'
-  },
-  topicContent: {
-    flex: 1,
-    justifyContent: 'space-between'
-  },
-  topicIndicator: {
-    width: 32,
-    height: 4,
-    borderRadius: 999,
-    marginBottom: 18
-  },
-  topicTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
-    marginBottom: 12
-  },
-  topicDescription: {
-    fontSize: 14,
-    color: 'rgba(255, 255, 255, 0.88)',
-    lineHeight: 20
+    justifyContent: 'space-between',
+    paddingHorizontal: 24
   }
 });
 

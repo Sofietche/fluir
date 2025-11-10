@@ -2,19 +2,23 @@ import 'dotenv/config';
 
 export default ({ config }) => ({
   ...config,
-  name: 'fluir',
-  slug: 'fluir',
-  version: '1.0.0',
-  orientation: 'portrait',
-  userInterfaceStyle: 'automatic',
+  name: config.name ?? 'fluir',
+  slug: config.slug ?? 'fluir',
+  version: config.version ?? '1.0.0',
+  orientation: config.orientation ?? 'portrait',
+  userInterfaceStyle: config.userInterfaceStyle ?? 'automatic',
   splash: {
-    backgroundColor: '#f4f3ff'
+    ...(config.splash ?? {}),
+    backgroundColor: config.splash?.backgroundColor ?? '#EEF1FF'
   },
   ios: {
+    ...(config.ios ?? {}),
     supportsTablet: true
   },
-  android: {},
-  plugins: ['react-native-reanimated'],
+  android: {
+    ...(config.android ?? {})
+  },
+  plugins: Array.from(new Set([...(config.plugins ?? []), 'react-native-reanimated'])),
   extra: {
     ...(config.extra ?? {}),
     firebase: {
