@@ -10,12 +10,9 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 
 import AuthScreen from './src/screens/AuthScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import TopicScreen from './src/screens/TopicScreen';
 import { auth } from './src/firebase/firebaseConfig';
-
-type RootStackParamList = {
-  auth: undefined;
-  home: undefined;
-};
+import { RootStackParamList } from './src/navigation/types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -23,7 +20,7 @@ const NavigationTheme = {
   ...DefaultTheme,
   colors: {
     ...DefaultTheme.colors,
-    background: '#f4f3ff'
+    background: '#EEF1FF'
   }
 };
 
@@ -59,9 +56,18 @@ const App: React.FC = () => {
               }}
             >
               {user ? (
-                <Stack.Screen name="home">
-                  {() => <HomeScreen user={user} />}
-                </Stack.Screen>
+                <>
+                  <Stack.Screen name="home">
+                    {({ navigation }) => <HomeScreen user={user} navigation={navigation} />}
+                  </Stack.Screen>
+                  <Stack.Screen
+                    name="topic"
+                    component={TopicScreen}
+                    options={{
+                      animation: 'slide_from_right'
+                    }}
+                  />
+                </>
               ) : (
                 <Stack.Screen name="auth" component={AuthScreen} />
               )}
@@ -81,7 +87,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#f4f3ff'
+    backgroundColor: '#EEF1FF'
   }
 });
 
