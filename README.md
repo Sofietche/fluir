@@ -16,8 +16,10 @@ Proyecto Expo configurado con navegación básica, soporte para Firebase y un ma
 2. Ejecuta `npx expo prebuild` cuando necesites generar los proyectos nativos para configurar librerías como Reanimated.
 3. Inicia la app con `npm start` y sigue las instrucciones de Expo CLI para abrirla en Expo Go, iOS o Android.
 
-## Configuración de entorno
+## Datos iniciales en Firebase
 
-1. Copia el archivo `.env.example` y renómbralo a `.env`.
-2. Completa las credenciales del proyecto de Firebase (configuración web) y los identificadores de cliente de Google necesarios para Expo, Android, iOS y Web.
-3. Asegúrate de reiniciar Metro Bundler después de modificar el archivo `.env` para que Expo recargue la configuración.
+El proyecto incluye un script de _seed_ para preparar la colección `topics` y sus subcolecciones `cards` en Cloud Firestore.
+
+1. Copia el archivo `.env.example` a `.env` (o `.env.local`) y completa los valores de tu proyecto de Firebase.
+2. Ejecuta `npm run seed:topics` para crear/actualizar los tópicos y las cartas iniciales del tema **amor**.
+3. Para añadir nuevos tópicos o cartas, edita `scripts/data/topics.js` y vuelve a ejecutar el comando anterior.
