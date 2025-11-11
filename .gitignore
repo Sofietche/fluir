@@ -10,3 +10,5 @@ package-lock.json
 pnpm-lock.yaml
 .DS_Store
 .env
+assets/icon.png
+assets/splash.png

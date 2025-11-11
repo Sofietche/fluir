@@ -14,6 +14,11 @@ import {
   query
 } from 'firebase/firestore';
 
+import PrimaryButton from '../components/PrimaryButton';
+import PromptCard from '../components/PromptCard';
+import TexturedBackground, { TextureShape } from '../components/TexturedBackground';
+import { useProtectedRoute } from '../hooks/useProtectedRoute';
+import { useTopicCards } from '../hooks/useTopicCards';
 import { RootStackParamList } from '../navigation/types';
 import { db } from '../firebase/firebaseConfig';
 
@@ -25,24 +30,15 @@ type TopicCard = {
   order: number;
 };
 
-type NoiseVeil = {
-  top?: number;
-  right?: number;
-  bottom?: number;
-  left?: number;
-  width: number;
-  height: number;
-  opacity: number;
-  rotate: string;
-};
-
-const noiseVeil: NoiseVeil[] = [
-  { top: -60, right: -20, width: 240, height: 240, opacity: 0.16, rotate: '18deg' },
-  { top: 120, left: -80, width: 280, height: 280, opacity: 0.12, rotate: '-24deg' },
-  { bottom: -90, right: -60, width: 260, height: 260, opacity: 0.1, rotate: '32deg' }
+const textureShapes: TextureShape[] = [
+  { top: -60, right: -20, width: 240, height: 240, opacity: 0.16, rotate: '18deg', backgroundColor: 'rgba(255,255,255,0.2)' },
+  { top: 120, left: -80, width: 280, height: 280, opacity: 0.12, rotate: '-24deg', backgroundColor: 'rgba(255,255,255,0.18)' },
+  { bottom: -90, right: -60, width: 260, height: 260, opacity: 0.1, rotate: '32deg', backgroundColor: 'rgba(255,255,255,0.14)' }
 ];
 
-type TopicScreenProps = NativeStackScreenProps<RootStackParamList, 'topic'>;
+const TopicScreen: React.FC<NativeStackScreenProps<RootStackParamList, 'topic'>> = ({ navigation, route }) => {
+  useProtectedRoute(navigation);
+  const { id, title, description, gradient, accentColor } = route.params;
 
 const TopicScreen: React.FC<TopicScreenProps> = ({ navigation, route }) => {
   const { id, title, description, gradient, accentColor } = route.params;
@@ -125,34 +121,16 @@ const TopicScreen: React.FC<TopicScreenProps> = ({ navigation, route }) => {
     <View style={styles.wrapper}>
       <StatusBar style="light" animated />
       <LinearGradient colors={gradient} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.background}>
-        <View pointerEvents="none" style={styles.noiseLayer}>
-          {noiseVeil.map((blob, index) => (
-            <View
-              // eslint-disable-next-line react/no-array-index-key
-              key={index}
-              style={[
-                styles.noiseBlob,
-                {
-                  top: blob.top,
-                  right: blob.right,
-                  bottom: blob.bottom,
-                  left: blob.left,
-                  width: blob.width,
-                  height: blob.height,
-                  opacity: blob.opacity,
-                  transform: [{ rotate: blob.rotate }]
-                }
-              ]}
-            />
-          ))}
-        </View>
-        <View style={[styles.blob, styles.blobOne]} />
-        <View style={[styles.blob, styles.blobTwo]} />
+        <TexturedBackground shapes={textureShapes} />
       </LinearGradient>
       <SafeAreaView style={styles.safeArea}>
-        <TouchableOpacity accessibilityRole="button" onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backButtonText}>Volver</Text>
-        </TouchableOpacity>
+        <PrimaryButton
+          label="Volver"
+          onPress={() => navigation.goBack()}
+          variant="translucent"
+          size="small"
+          style={styles.backButton}
+        />
         <View style={styles.contentCard}>
           <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
           <View style={styles.headerRow}>
@@ -234,32 +212,6 @@ const styles = StyleSheet.create({
   background: {
     ...StyleSheet.absoluteFillObject
   },
-  noiseLayer: {
-    ...StyleSheet.absoluteFillObject
-  },
-  noiseBlob: {
-    position: 'absolute',
-    borderRadius: 999,
-    backgroundColor: 'rgba(255, 255, 255, 0.25)'
-  },
-  blob: {
-    position: 'absolute',
-    backgroundColor: 'rgba(255, 255, 255, 0.12)',
-    borderRadius: 999,
-    opacity: 0.65
-  },
-  blobOne: {
-    width: 220,
-    height: 220,
-    top: -40,
-    right: -60
-  },
-  blobTwo: {
-    width: 180,
-    height: 180,
-    bottom: -60,
-    left: -40
-  },
   safeArea: {
     flex: 1,
     paddingHorizontal: 24,
@@ -270,17 +222,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 999,
-    borderWidth: 1,
-    marginBottom: 32,
-    backgroundColor: 'rgba(15, 23, 42, 0.25)',
-    borderColor: 'rgba(255,255,255,0.4)'
-  },
-  backButtonText: {
-    color: '#F8FAFC',
-    fontWeight: '600',
-    letterSpacing: 0.3
+    marginBottom: 24
   },
   contentCard: {
+    flex: 1,
     backgroundColor: 'rgba(15, 23, 42, 0.55)',
     borderRadius: 32,
     padding: 28,
